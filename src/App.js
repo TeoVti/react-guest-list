@@ -4,31 +4,44 @@ import { useEffect, useState } from 'react';
 export default function App() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [allGuests, setAllGuests] = useState([]);
+  const [allGuests, setAllGuests] = useState(undefined);
 
   const baseUrl = 'http://localhost:5000';
 
-  useEffect(() => {
-    async function fetched() {
-      const response = await fetch(`${baseUrl}/`);
-      const data = await response.json();
-      setAllGuests(data);
-    }
-    fetched();
-  }, [allGuests]);
+  async function fetchGuests() {
+    const response = await fetch(`${baseUrl}/`);
+    const data = await response.json();
+    setAllGuests(data);
+  }
 
-  const submitName = () => {
-    fetch(`${baseUrl}/`, {
+  useEffect(() => {
+    fetchGuests();
+  }, []);
+
+  const submitName = async () => {
+    await fetch(`${baseUrl}/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ firstName: firstName, lastName: lastName }),
     });
+    fetchGuests();
   };
 
-  if (!allGuests) {
-    return <>Loading...</>;
+  console.log(allGuests);
+
+  if (allGuests === undefined) {
+    return (
+      <>
+        <br />
+        <br />
+        <br />
+        <br />
+        <br />
+        Loading..........................
+      </>
+    );
   }
 
   return (
@@ -51,8 +64,8 @@ export default function App() {
         {allGuests.map((guest) => (
           <li key={guest.id}>
             <button
-              onClick={() => {
-                const response = fetch(`${baseUrl}/${guest.id}`, {
+              onClick={async () => {
+                const response = await fetch(`${baseUrl}/${guest.id}`, {
                   method: 'PATCH',
                   headers: {
                     'Content-Type': 'application/json',
@@ -61,6 +74,7 @@ export default function App() {
                     attending: guest.attending === true ? false : true,
                   }),
                 });
+                fetchGuests();
               }}
             >
               {' '}
@@ -68,10 +82,11 @@ export default function App() {
             </button>
             {guest.firstName + ' ' + guest.lastName}
             <button
-              onClick={() => {
-                const response = fetch(`${baseUrl}/${guest.id}`, {
+              onClick={async () => {
+                const response = await fetch(`${baseUrl}/${guest.id}`, {
                   method: 'DELETE',
                 });
+                fetchGuests();
               }}
             >
               X
